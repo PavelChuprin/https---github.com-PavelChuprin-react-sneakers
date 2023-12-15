@@ -1,115 +1,84 @@
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import axios from "axios";
+import Drawer from "./components/Drawer";
+import Header from "./components/Header";
+import Home from "./pages/Home";
+import Favorites from "./pages/Favorites";
+
 function App() {
+  const [items, setItems] = React.useState([]);
+  const [cartItems, setCartItems] = React.useState([]);
+  const [favorites, setFavorites] = React.useState([]);
+  const [searchValue, setSearchValue] = React.useState("");
+  const [cartOpened, setCartOpened] = React.useState(false);
+
+  React.useEffect(() => {
+    axios
+      .get("https://65239b78ea560a22a4e88b1b.mockapi.io/items")
+      .then((res) => {
+        setItems(res.data);
+      });
+    axios
+      .get("https://65239b78ea560a22a4e88b1b.mockapi.io/cart")
+      .then((res) => {
+        setCartItems(res.data);
+      });
+  }, []);
+
+  const onAddToCart = (obj) => {
+    axios.post("https://65239b78ea560a22a4e88b1b.mockapi.io/cart", obj);
+    setCartItems((prev) => [...prev, obj]);
+  };
+
+  const onRemoveItem = (id) => {
+    axios.delete(`https://65239b78ea560a22a4e88b1b.mockapi.io/cart/${id}`);
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const onAddToFavorite = (obj) => {
+    if (favorites.find((item) => item.id === obj.id)) {
+      setFavorites((prev) => prev.filter((item) => item.id !== obj.id));
+    } else {
+      setFavorites((prev) => [...prev, obj]);
+    }
+  };
+
+  const onChangeSearchInput = (event) => {
+    setSearchValue(event.target.value);
+  };
+
   return (
     <div className="wrapper clear">
-      <header className="d-flex justify-between align-center p-40">
-        <div className="d-flex align-center">
-          <img width={40} height={40} src="/img/logo.png" alt="logo" />
-          <div>
-            <h3 className="text-uppercase">React Sneakers</h3>
-            <p className="opacity-5">Магазин лучших кроссовок</p>
-          </div>
-        </div>
-        <ul className="d-flex">
-          <li className="mr-30">
-            <img width={18} height={18} src="/img/cart.svg" alt="cart" />
-            <span>1205 руб.</span>
-          </li>
-          <li className="mr-30">
-            <img
-              width={18}
-              height={18}
-              src="/img/favorites.svg"
-              alt="favorites"
+      {cartOpened && (
+        <Drawer
+          items={cartItems}
+          onClose={() => setCartOpened(false)}
+          onRemove={onRemoveItem}
+        />
+      )}
+      <Header onClickOpenCart={() => setCartOpened(true)} />
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Home
+              items={items}
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+              onChangeSearchInput={onChangeSearchInput}
+              onAddToFavorite={onAddToFavorite}
+              onAddToCart={onAddToCart}
             />
-            <span>Закладки</span>
-          </li>
-          <li>
-            <img width={18} height={18} src="/img/user.svg" alt="user" />
-            <span>Профиль</span>
-          </li>
-        </ul>
-      </header>
-      <div className="content p-40">
-        <h1 className="mb-40">Все кроссовки</h1>
-
-        <div className="d-flex">
-          <div className="card">
-            <img
-              width={133}
-              height={112}
-              src="/img/sneakers/1.jpg"
-              alt="items"
-            />
-            <h5>Мужские Кроссовки Nike Blazer Mid Suede</h5>
-            <div className="d-flex justify-between align-center">
-              <div className="d-flex flex-column">
-                <span>Цена:</span>
-                <b>12 999 руб.</b>
-              </div>
-              <button className="button">
-                <img width={11} height={11} src="/img/plus.svg" alt="plus" />
-              </button>
-            </div>
-          </div>
-
-          <div className="card">
-            <img
-              width={133}
-              height={112}
-              src="/img/sneakers/2.jpg"
-              alt="items"
-            />
-            <h5>Мужские Кроссовки Nike Blazer Mid Suede</h5>
-            <div className="d-flex justify-between align-center">
-              <div className="d-flex flex-column">
-                <span>Цена:</span>
-                <b>12 999 руб.</b>
-              </div>
-              <button className="button">
-                <img width={11} height={11} src="/img/plus.svg" alt="plus" />
-              </button>
-            </div>
-          </div>
-
-          <div className="card">
-            <img
-              width={133}
-              height={112}
-              src="/img/sneakers/3.jpg"
-              alt="items"
-            />
-            <h5>Мужские Кроссовки Nike Blazer Mid Suede</h5>
-            <div className="d-flex justify-between align-center">
-              <div className="d-flex flex-column">
-                <span>Цена:</span>
-                <b>12 999 руб.</b>
-              </div>
-              <button className="button">
-                <img width={11} height={11} src="/img/plus.svg" alt="plus" />
-              </button>
-            </div>
-          </div>
-
-          <div className="card">
-            <img
-              width={133}
-              height={112}
-              src="/img/sneakers/4.jpg"
-              alt="items"
-            />
-            <h5>Мужские Кроссовки Nike Blazer Mid Suede</h5>
-            <div className="d-flex justify-between align-center">
-              <div className="d-flex flex-column">
-                <span>Цена:</span>
-                <b>12 999 руб.</b>
-              </div>
-              <button className="button">
-                <img width={11} height={11} src="/img/plus.svg" alt="plus" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+          }
+        />
+        <Route
+          path="/favorites"
+          element={
+            <Favorites items={favorites} onAddToFavorite={onAddToFavorite} />
+          }
+        />
+      </Routes>
     </div>
   );
 }
