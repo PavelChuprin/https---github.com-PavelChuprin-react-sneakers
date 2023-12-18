@@ -37,6 +37,7 @@ const Header = (props) => {
             <span>Профиль</span>
           </li>
         </Link>
+
       </ul>
     </header>
   );

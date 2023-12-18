@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Favorites from "./pages/Favorites";
 import AppContext from "./context";
 
+
 function App() {
   const [items, setItems] = React.useState([]);
   const [cartItems, setCartItems] = React.useState([]);

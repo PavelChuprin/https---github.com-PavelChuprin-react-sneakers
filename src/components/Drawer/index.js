@@ -31,7 +31,6 @@ const Drawer = ({ onRemove, items = [] }) => {
     }
     setIsLoading(false);
   };
-
   return (
     <div className={styles.overlay}>
       <div className={styles.drawer}>
@@ -100,6 +99,7 @@ const Drawer = ({ onRemove, items = [] }) => {
             }
           />
         )}
+
       </div>
     </div>
   );
