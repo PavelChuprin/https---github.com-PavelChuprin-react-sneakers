@@ -2,6 +2,7 @@ import React from "react";
 import styles from "./Drawer.module.css";
 
 const Drawer = ({ onClose, onRemove, items = [] }) => {
+
   return (
     <div className={styles.overlay}>
       <div className={styles.drawer}>
@@ -74,6 +75,7 @@ const Drawer = ({ onClose, onRemove, items = [] }) => {
             </button>
           </div>
         )}
+
       </div>
     </div>
   );
