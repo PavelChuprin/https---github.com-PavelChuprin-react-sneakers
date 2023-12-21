@@ -1,11 +1,14 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import axios from "axios";
+
 import Drawer from "./components/Drawer";
 import Header from "./components/Header";
 import Home from "./pages/Home";
 import Favorites from "./pages/Favorites";
 import AppContext from "./context";
+import Orders from "./pages/Orders";
+import { API_URL } from "./constants";
 
 
 function App() {
@@ -18,39 +21,65 @@ function App() {
 
   React.useEffect(() => {
     async function fetchData() {
-      const cartResponse = await axios.get(
-        "https://65239b78ea560a22a4e88b1b.mockapi.io/cart"
-      );
-      const itemsResponse = await axios.get(
-        "https://65239b78ea560a22a4e88b1b.mockapi.io/items"
-      );
+      try {
+        const [cartResponse, itemsResponse] = await Promise.all([
+          axios.get(API_URL + "/cart"),
+          axios.get(API_URL + "/items"),
+        ]);
+        setIsLoading(false);
 
-      setIsLoading(false);
-
-      setCartItems(cartResponse.data);
-      setItems(itemsResponse.data);
+        setCartItems(cartResponse.data);
+        setItems(itemsResponse.data);
+      } catch (error) {
+        alert("Ошибка при запросе данных");
+        console.error(error);
+      }
     }
 
     fetchData();
   }, []);
 
-  const onAddToCart = (obj) => {
-    if (cartItems.find((item) => Number(item.id) === Number(obj.id))) {
-      axios.delete(
-        `https://65239b78ea560a22a4e88b1b.mockapi.io/cart/${obj.id}`
+  const onAddToCart = async (obj) => {
+    try {
+      const findItem = cartItems.find(
+        (item) => Number(item.parentId) === Number(obj.id)
       );
-      setCartItems((prev) =>
-        prev.filter((item) => Number(item.id) !== Number(obj.id))
-      );
-    } else {
-      axios.post("https://65239b78ea560a22a4e88b1b.mockapi.io/cart", obj);
-      setCartItems((prev) => [...prev, obj]);
+      if (findItem) {
+        setCartItems((prev) =>
+          prev.filter((item) => Number(item.parentId) !== Number(obj.id))
+        );
+        await axios.delete(API_URL + `/cart/${findItem.id}`);
+      } else {
+        setCartItems((prev) => [...prev, obj]);
+        const { data } = await axios.post(API_URL + "/cart", obj);
+        setCartItems((prev) =>
+          prev.map((item) => {
+            if (item.parentId === data.parentId) {
+              return {
+                ...item,
+                id: data.id,
+              };
+            }
+            return item;
+          })
+        );
+      }
+    } catch (error) {
+      alert("Ошибка при добавлении в корзину");
+      console.error(error);
     }
   };
 
-  const onRemoveItem = (id) => {
-    axios.delete(`https://65239b78ea560a22a4e88b1b.mockapi.io/cart/${id}`);
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  const onRemoveItem = async (id) => {
+    try {
+      setCartItems((prev) =>
+        prev.filter((item) => Number(item.id) !== Number(id))
+      );
+      await axios.delete(API_URL + `/cart/${id}`);
+    } catch (error) {
+      alert("Ошибка при удалении из корзины");
+      console.error(error);
+    }
   };
 
   const onAddToFavorite = (obj) => {
@@ -68,7 +97,7 @@ function App() {
   };
 
   const isItemAdded = (id) => {
-    return cartItems?.some((obj) => Number(obj.id) === Number(id));
+    return cartItems?.some((obj) => Number(obj.parentId) === Number(id));
   };
 
   return (
@@ -78,12 +107,14 @@ function App() {
         cartItems,
         favorites,
         isItemAdded,
+        onAddToCart,
+        onAddToFavorite,
         setCartOpened,
         setCartItems,
       }}
     >
       <div className="wrapper clear">
-        {cartOpened && <Drawer items={cartItems} onRemove={onRemoveItem} />}
+        <Drawer items={cartItems} onRemove={onRemoveItem} opened={cartOpened} />
         <Header onClickOpenCart={() => setCartOpened(true)} />
         <Routes>
           <Route
@@ -102,6 +133,7 @@ function App() {
             }
           />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/orders" element={<Orders />} />
         </Routes>
       </div>
     </AppContext.Provider>

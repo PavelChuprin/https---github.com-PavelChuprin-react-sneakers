@@ -1,29 +1,36 @@
 import React from "react";
-import AppContext from "../../context";
-import Info from "../Info";
-import styles from "./Drawer.module.css";
 import axios from "axios";
+
+import Info from "../Info";
+import AppContext from "../../context";
+import { API_URL } from "../../constants";
+import { useCart } from "../../hooks/useCart";
+
+import styles from "./Drawer.module.css";
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const Drawer = ({ onRemove, items = [] }) => {
-  const { setCartOpened, setCartItems, cartItems } =
-    React.useContext(AppContext);
-
+const Drawer = ({ onRemove, items = [], opened }) => {
+  const { setCartOpened } = React.useContext(AppContext);
+  const { cartItems, setCartItems, totalPrice } = useCart();
+  const [orderId, setOrderId] = React.useState(null);
   const [isOrderComplete, setIsOrderComplete] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
 
   const onClickOrder = async () => {
     try {
       setIsLoading(true);
+      // const { data } = await axios.post(API_URL + "/orders", {
+      //   items: cartItems,
+      // });
+      // setOrderId(data.id);
+      // Ресурс mockapi.io установил лимит бесплатных запросов (2) для одного проекта
       setIsOrderComplete(true);
       setCartItems([]);
 
       for (let i = 0; i < cartItems.length; i++) {
         const item = cartItems[i];
-        await axios.delete(
-          "https://65239b78ea560a22a4e88b1b.mockapi.io/cart/" + item.id
-        );
+        await axios.delete(API_URL + "/cart/" + item.id);
         await delay(1000);
       }
     } catch (error) {
@@ -32,7 +39,7 @@ const Drawer = ({ onRemove, items = [] }) => {
     setIsLoading(false);
   };
   return (
-    <div className={styles.overlay}>
+    <div className={`${styles.overlay} ${opened ? styles.overlayVisible : ""}`}>
       <div className={styles.drawer}>
         <h2 className="d-flex justify-between mb-30">
           Корзина{" "}
@@ -47,8 +54,8 @@ const Drawer = ({ onRemove, items = [] }) => {
         {items.length > 0 ? (
           <div className="d-flex flex-column flex">
             <div className={styles.items}>
-              {items.map((obj) => (
-                <div key={obj.id} className={styles.cartItem}>
+              {items.map((obj, index) => (
+                <div key={index} className={styles.cartItem}>
                   <div
                     style={{ backgroundImage: `url(${obj.imageUrl})` }}
                     className={styles.cartItemImg}
@@ -71,12 +78,12 @@ const Drawer = ({ onRemove, items = [] }) => {
                 <li className="d-flex">
                   <span>Итого:</span>
                   <div className={styles.cartTotalBlockDiv}></div>
-                  <b>21 498 руб.</b>
+                  <b>{totalPrice} руб.</b>
                 </li>
                 <li className="d-flex">
                   <span>Налог 5%</span>
                   <div className={styles.cartTotalBlockDiv}></div>
-                  <b>1074 руб.</b>
+                  <b>{Math.round(totalPrice * 0.05)} руб.</b>
                 </li>
               </ul>
               <button
@@ -97,6 +104,7 @@ const Drawer = ({ onRemove, items = [] }) => {
                 ? "Ваш заказ скоро будет передан курьерской доставке"
                 : "Добавьте хотя бы одну пару кроссовок, чтобы сделать заказ."
             }
+            cartMode
           />
         )}
 
