@@ -18,6 +18,7 @@ function App() {
   const [searchValue, setSearchValue] = React.useState("");
   const [cartOpened, setCartOpened] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [errorText, setErrorText] = React.useState(null);
 
   React.useEffect(() => {
     async function fetchData() {
@@ -31,7 +32,8 @@ function App() {
         setCartItems(cartResponse.data);
         setItems(itemsResponse.data);
       } catch (error) {
-        alert("Ошибка при запросе данных");
+        setIsLoading(false);
+        setErrorText("Ошибка при запросе данных");
         console.error(error);
       }
     }
@@ -65,7 +67,7 @@ function App() {
         );
       }
     } catch (error) {
-      alert("Ошибка при добавлении в корзину");
+      setErrorText("Ошибка при добавлении в корзину");
       console.error(error);
     }
   };
@@ -77,7 +79,7 @@ function App() {
       );
       await axios.delete(API_URL + `/cart/${id}`);
     } catch (error) {
-      alert("Ошибка при удалении из корзины");
+      setErrorText("Ошибка при удалении из корзины");
       console.error(error);
     }
   };
@@ -129,6 +131,7 @@ function App() {
                 onAddToFavorite={onAddToFavorite}
                 onAddToCart={onAddToCart}
                 isLoading={isLoading}
+                errorText={errorText}
               />
             }
           />

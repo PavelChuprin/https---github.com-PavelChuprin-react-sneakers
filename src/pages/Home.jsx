@@ -9,6 +9,7 @@ function Home({
   onAddToFavorite,
   onAddToCart,
   isLoading,
+  errorText,
 }) {
   const renderItems = () => {
     const filtredItems = items?.filter((item) =>
@@ -49,6 +50,7 @@ function Home({
           )}
         </div>
       </div>
+      {errorText && <h2 className="error">{errorText}</h2>}
       <div className="d-flex flex-wrap">{renderItems()}</div>
     </div>
   );
